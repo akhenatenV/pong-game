@@ -1,0 +1,183 @@
+<html>
+    <canvas id="gameCanvas" width="900" height="600"></canvas>
+
+</html>
+
+<script>
+
+var canvas;
+var ctx;
+var ballX = 50;
+var ballSpeedX = 10;
+var ballY = 50;
+var ballSpeedY = 4;
+
+var player1Score = 0;
+var player2Score = 0;
+
+const WINNING_SCORE = 3;
+var showWinScreen = false;
+
+var paddle1Y = 4;
+var paddle2Y = 4;
+const PADDLE_HEIGHT = 100;
+const PADDLE_THICKNESS = 10;
+
+function calculateMousePos(e){
+    var rect = canvas.getBoundingClientRect();
+    var root = document.documentElement;
+    var mouseX = e.clientX - rect.left - root.scrollLeft;
+    var mouseY = e.clientY - rect.top - root.scrollTop;
+    return{
+        x:mouseX,
+        y:mouseY
+    };
+}
+
+function handleMouseClick(e){
+    if(showWinScreen){
+        player1Score = 0;
+        player2Score = 0;
+        showWinScreen = false;
+    }
+}
+
+window.onload = function(){
+    canvas = document.getElementById("gameCanvas");
+    ctx = canvas.getContext("2d");
+
+    // speed of the ball
+    var framesPerSecond = 30;
+
+    // the game loop
+    setInterval(function(){
+        drawEverything();
+        moveEverything();
+    }, 1000/framesPerSecond);
+    
+    // getting the mouse movement for left paddle
+    canvas.addEventListener('mousemove', function(e){
+        var mousePos = calculateMousePos(e);
+        paddle1Y = mousePos.y - (PADDLE_HEIGHT / 2);
+    })
+}
+
+
+function ballReset(){
+    if(player1Score >= WINNING_SCORE || player2Score >= WINNING_SCORE){
+        showWinScreen = true;
+    }
+
+    ballSpeedX = -ballSpeedX;
+    ballX = canvas.width/2;
+    ballY = canvas.height/2;
+}
+
+function computerMovements(){
+    var paddle2YCenter = paddle2Y + (PADDLE_HEIGHT/2);
+    if(paddle2YCenter < ballY-35){
+        paddle2Y += 6;
+    }else if(paddle2YCenter > ballY-35){
+        paddle2Y -= 6;
+    }
+}
+
+function moveEverything(){
+    if(showWinScreen){
+        ctx.fillStyle="white";
+        if(player1Score >= WINNING_SCORE){
+            ctx.fillText("Left Player Won", canvas.width/2 , 200);
+        }else if(player2Score >= WINNING_SCORE){
+            ctx.fillText("Computer Won", canvas.width/2 , 200);
+        }
+       ctx.fillText("Click to continue", canvas.width/2, 500);
+        return;
+    }
+    computerMovements();
+    // moving the balls x. at the speed of ballSpeedX
+    ballX += ballSpeedX;
+    ballY += ballSpeedY;
+
+    // checking to see if the ball is off the screen at the left
+    // if so bounce it back
+    if(ballX < 0){
+        // check to see if the ball hits the paddle
+        if(ballY > paddle1Y && ballY < paddle1Y+PADDLE_HEIGHT){
+            ballSpeedX = -ballSpeedX;
+            
+            var deltaY = ballY-(paddle1Y+PADDLE_HEIGHT/2);
+            ballSpeedY = deltaY * 0.35;
+        }else{
+            ballReset();
+            player2Score ++;
+        }
+    }
+    // checking to see bif the ball is off the screen at the right 
+    // if so bounce it back
+    if(ballX > canvas.width){
+        if(ballY > paddle2Y && ballY < paddle2Y+PADDLE_HEIGHT){
+            ballSpeedX = -ballSpeedX;
+
+            var deltaY = ballY-(paddle2Y+PADDLE_HEIGHT/2);
+            ballSpeedY = deltaY * 0.35;
+        }else{
+            ballReset();
+            player1Score ++;
+        }
+    }
+
+    ballY += ballSpeedY;
+
+    if(ballY < 0){
+        ballSpeedY = -ballSpeedY;
+    }
+    if(ballY > canvas.height){
+        ballSpeedY = -ballSpeedY;
+    }
+}
+
+
+function drawEverything(){
+    // blanc out canvas with black
+    colorRect(0, 0, canvas.width, canvas.height, 'black');
+    
+    // left player paddle
+    colorRect(0, paddle1Y, PADDLE_THICKNESS, PADDLE_HEIGHT, 'white');
+
+    // Right player paddle
+    colorRect(canvas.width - PADDLE_THICKNESS, paddle2Y, 10, PADDLE_HEIGHT, 'white');
+    
+    // draw the ball
+    drawCircle(ballX, ballY, 10, 'white');
+
+    ctx.fillText(player1Score, 100, 100);
+    ctx.fillText(player2Score, canvas.width-100, 100);
+
+    //draw the net
+    drawNet();
+}
+
+
+// draw ball function
+function drawCircle(centerX, centerY, radius, drawColour){
+    ctx. fillStyle = drawColour;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, Math.PI*2, true);
+    ctx.fill();
+}
+
+// draw rectangles
+function colorRect(leftX, topY, width, height, drawColour){
+    ctx.fillStyle= drawColour;
+    ctx.fillRect(leftX, topY, width, height);
+}
+
+//draw the net
+function drawNet(){
+    for (let i = 10; i< canvas.height; i+= 40){
+        colorRect(canvas.width / 2, i, 5, 10, 'white');
+    }
+}
+
+
+</script>
