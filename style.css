@@ -1,0 +1,8 @@
+body{
+    background: linear-gradient(to bottom, #66b0b0 0%, #6ff0f0 100%);
+}
+#gameArea{
+    background-color: #555;
+    border:8px solid #000;
+    border-radius: 3px;
+}
